@@ -988,7 +988,20 @@ const ExperimentApp = {
   // 使用 Web Audio API 合成单词发音（不同单词有不同音调）
   playWordAudio(word) {
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // 创建 AudioContext（需要在用户交互后创建）
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        console.log('Web Audio API 不可用');
+        return false;
+      }
+
+      const audioContext = new AudioContext();
+
+      // iOS Safari 需要 resume
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -997,30 +1010,32 @@ const ExperimentApp = {
 
       // 根据单词生成不同的频率模式
       const charCodes = word.split('').map(c => c.charCodeAt(0));
-      const baseFreq = 200 + (charCodes.reduce((a, b) => a + b, 0) % 400);
+      const baseFreq = 300 + (charCodes.reduce((a, b) => a + b, 0) % 500);
 
       oscillator.frequency.value = baseFreq;
       oscillator.type = 'sine';
-      gainNode.gain.value = 0.4;
+      gainNode.gain.value = 0.5;
 
       // 添加频率变化模拟语调
       const now = audioContext.currentTime;
       oscillator.frequency.setValueAtTime(baseFreq, now);
-      oscillator.frequency.linearRampToValueAtTime(baseFreq * 1.2, now + 0.3);
-      oscillator.frequency.linearRampToValueAtTime(baseFreq * 0.9, now + 0.6);
+      oscillator.frequency.linearRampToValueAtTime(baseFreq * 1.3, now + 0.2);
+      oscillator.frequency.linearRampToValueAtTime(baseFreq * 0.8, now + 0.5);
+      oscillator.frequency.linearRampToValueAtTime(baseFreq * 1.1, now + 0.8);
 
       // 音量包络
       gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.4, now + 0.1);
-      gainNode.gain.linearRampToValueAtTime(0.3, now + 0.5);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.8);
+      gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
+      gainNode.gain.linearRampToValueAtTime(0.4, now + 0.3);
+      gainNode.gain.linearRampToValueAtTime(0.2, now + 0.6);
+      gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
 
       oscillator.start(now);
-      oscillator.stop(now + 0.8);
+      oscillator.stop(now + 1.0);
 
       return true;
     } catch (e) {
-      console.log('Web Audio API 不可用:', e);
+      console.log('Web Audio API 错误:', e);
       return false;
     }
   },
