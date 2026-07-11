@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="听音选图实验 - Auditory-Visual Matching Task">
+  <title>听音选图实验</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page-container">
+
+  <!-- ==================== 欢迎页 ==================== -->
+  <div id="page-welcome" class="page active">
+    <div class="welcome-header">
+      <h1 class="welcome-title">听音选图实验</h1>
+      <p class="welcome-subtitle">Auditory-Visual Matching Task</p>
+    </div>
+
+    <div class="welcome-content">
+      <div class="welcome-text">
+        <p>欢迎参加本次实验！</p>
+        <p>本实验将播放一些声音，请您根据听到的内容，</p>
+        <p>从三张图片中选出对应的图片。</p>
+        <p>实验共约 10 分钟，请在安静的环境中，</p>
+        <p>佩戴耳机参与实验。</p>
+      </div>
+    </div>
+
+    <div class="btn-group" style="justify-content: center;">
+      <button class="btn" onclick="ExperimentApp.startExperiment()">
+        开始实验
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 被试信息填写页 ==================== -->
+  <div id="page-info" class="page">
+    <h2 class="form-title">请填写您的基本信息</h2>
+
+    <div class="form-group">
+      <label class="form-label" for="participant-id">被试编号 *</label>
+      <input type="text" id="participant-id" class="form-input" placeholder="请输入被试编号（如 S001）">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="participant-age">年龄 *</label>
+      <input type="number" id="participant-age" class="form-input" placeholder="请输入您的年龄" min="1" max="120">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">性别 *</label>
+      <div id="gender-group" class="gender-group">
+        <label class="radio-label">
+          <input type="radio" name="gender" value="男">
+          男
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="gender" value="女">
+          女
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="gender" value="其他">
+          其他
+        </label>
+      </div>
+    </div>
+
+    <div class="btn-group" style="justify-content: center; margin-top: 32px;">
+      <button class="btn" onclick="ExperimentApp.submitInfo()">
+        下一步
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 实验说明页 ==================== -->
+  <div id="page-instructions" class="page">
+    <h2 class="form-title">实验说明</h2>
+
+    <div class="instructions-content">
+      <div class="instructions-text">
+        <p>每道题，您会看到一个播放按钮和一个倒计时。</p>
+        <ul>
+          <li>请点击播放，仔细听声音。</li>
+          <li>您可以反复点击播放，多次收听。</li>
+          <li>听完之后，屏幕下方会出现三张图片。</li>
+          <li>请在 <strong>30 秒内</strong> 点击您认为与声音对应的图片。</li>
+        </ul>
+        <p>我们先进行 <strong>2 道练习题</strong>，帮助您熟悉操作。</p>
+      </div>
+    </div>
+
+    <div class="btn-group" style="justify-content: center;">
+      <button class="btn btn-success" onclick="ExperimentApp.startPractice()">
+        开始练习
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 正式实验引导页 ==================== -->
+  <div id="page-formal-intro" class="page">
+    <h2 class="form-title">练习完成</h2>
+
+    <div class="formal-intro-content">
+      <div class="formal-intro-text">
+        <p>练习阶段已结束，下面开始正式实验。</p>
+        <p>正式实验共 <strong>20 道题</strong>，<strong>无反馈提示</strong>。</p>
+        <p>请保持专注，认真作答。</p>
+      </div>
+    </div>
+
+    <div class="btn-group" style="justify-content: center;">
+      <button class="btn btn-success" onclick="ExperimentApp.startFormal()">
+        开始正式实验
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 实验页（练习/正式） ==================== -->
+  <div id="page-experiment" class="page">
+    <div class="experiment-header">
+      <div class="trial-info">
+        <span id="trial-header">第 1 题 / 共 20 题（练习）</span>
+      </div>
+      <div class="timer-box">
+        <span class="timer-label">倒计时:</span>
+        <span id="timer-display" class="timer-value timer-green">30s</span>
+      </div>
+    </div>
+
+    <div id="experiment-content">
+      <button id="play-btn" class="play-button" onclick="ExperimentApp.playAudio()">
+        ▶ 播放音频
+      </button>
+
+      <p class="play-hint">点击播放按钮，听声音（可重复播放）</p>
+
+      <div id="images-area" style="display: none;">
+        <!-- 图片选项动态生成 -->
+      </div>
+
+      <div id="feedback-area" style="display: none;">
+        <!-- 反馈提示 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 结束页 ==================== -->
+  <div id="page-end" class="page">
+    <div class="end-header">
+      <h2 class="end-title">✅ 实验已完成</h2>
+      <div class="end-thanks">
+        <p>感谢您的参与！</p>
+        <p>请将此编码截图发送给研究者。</p>
+      </div>
+    </div>
+
+    <div class="code-box">
+      <p class="code-label">您的完成码是：</p>
+      <p id="completion-code" class="code-value">849302</p>
+    </div>
+
+    <div class="submit-notice">
+      ⚠️ 您的数据已自动提交。如需保留一份自己的数据记录，可点击下方按钮下载。
+    </div>
+
+    <div class="download-section">
+      <p>点击下载您的实验数据（CSV格式）：</p>
+      <div class="btn-group" style="justify-content: center;">
+        <button class="btn btn-outline" onclick="ExperimentApp.downloadCSV()">
+          下载我的数据
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 加载配置和实验逻辑 -->
+<script src="config/trials.js"></script>
+<script src="experiment.js"></script>
+
+</body>
+</html>
