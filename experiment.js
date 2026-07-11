@@ -1364,10 +1364,12 @@ const ExperimentApp = {
       ExperimentApp.state.timeLeft = timeLeft;
       ExperimentApp.updateTimerDisplay();
 
-      // 强制显示图片
-      ExperimentApp.state.audioFirstEnded = true;
-      ExperimentApp.state.imagesShown = true;
-      ExperimentApp.showImages();
+      // 强制显示图片（使用 setTimeout 确保 DOM 更新完成）
+      setTimeout(() => {
+        ExperimentApp.state.audioFirstEnded = true;
+        ExperimentApp.state.imagesShown = false; // 重置以便 showImages 能执行
+        ExperimentApp.showImages();
+      }, 50);
     },
 
     // 练习反馈
@@ -1384,26 +1386,28 @@ const ExperimentApp = {
       ExperimentApp.state.timeLeft = 15;
       ExperimentApp.updateTimerDisplay();
 
-      // 显示图片
-      ExperimentApp.state.audioFirstEnded = true;
-      ExperimentApp.state.imagesShown = true;
-      ExperimentApp.showImages();
-
-      // 模拟选择
-      const trial = ExperimentApp.state.trials[0];
+      // 显示图片并模拟选择
       setTimeout(() => {
-        const cards = document.querySelectorAll('.image-card');
-        cards.forEach(c => {
-          if (isCorrect && c.dataset.word === trial.correctAnswer) {
-            c.classList.add('selected');
-          } else if (!isCorrect && c.dataset.word === trial.distractors[0]) {
-            c.classList.add('selected');
-          }
-        });
+        ExperimentApp.state.audioFirstEnded = true;
+        ExperimentApp.state.imagesShown = false;
+        ExperimentApp.showImages();
 
-        // 显示反馈
-        ExperimentApp.showFeedback(isCorrect, trial.correctAnswer);
-      }, 100);
+        // 模拟选择
+        const trial = ExperimentApp.state.trials[0];
+        setTimeout(() => {
+          const cards = document.querySelectorAll('.image-card');
+          cards.forEach(c => {
+            if (isCorrect && c.dataset.word === trial.correctAnswer) {
+              c.classList.add('selected');
+            } else if (!isCorrect && c.dataset.word === trial.options[0]) {
+              c.classList.add('selected');
+            }
+          });
+
+          // 显示反馈
+          ExperimentApp.showFeedback(isCorrect, trial.correctAnswer);
+        }, 100);
+      }, 50);
     },
 
     // 超时状态
@@ -1420,21 +1424,23 @@ const ExperimentApp = {
       ExperimentApp.state.timeLeft = 0;
       ExperimentApp.updateTimerDisplay();
 
-      // 显示图片
-      ExperimentApp.state.audioFirstEnded = true;
-      ExperimentApp.state.imagesShown = true;
-      ExperimentApp.showImages();
-
-      // 模拟超时
+      // 显示图片并模拟超时
       setTimeout(() => {
-        ExperimentApp.state.responded = true;
-        const feedbackArea = document.getElementById('feedback-area');
-        feedbackArea.className = 'feedback timeout show';
-        feedbackArea.textContent = '⏰ 超时！';
-        document.querySelectorAll('.image-card').forEach(c => {
-          c.classList.add('disabled');
-        });
-      }, 100);
+        ExperimentApp.state.audioFirstEnded = true;
+        ExperimentApp.state.imagesShown = false;
+        ExperimentApp.showImages();
+
+        // 模拟超时
+        setTimeout(() => {
+          ExperimentApp.state.responded = true;
+          const feedbackArea = document.getElementById('feedback-area');
+          feedbackArea.className = 'feedback timeout show';
+          feedbackArea.textContent = '⏰ 超时！';
+          document.querySelectorAll('.image-card').forEach(c => {
+            c.classList.add('disabled');
+          });
+        }, 100);
+      }, 50);
     },
 
     // 结束页
