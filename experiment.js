@@ -1197,23 +1197,43 @@ const ExperimentApp = {
 
     document.getElementById('completion-code').textContent = this.state.completionCode;
 
-    // Mock 数据提交
+    // 提交数据
     this.submitData();
   },
 
-  submitData() {
-    // Mock: 在控制台打印数据
+  async submitData() {
+    // 显示 loading 状态
+    document.getElementById('submit-loading').style.display = 'inline';
+
     console.log('=== 实验数据提交 ===');
     console.log('被试信息:', this.state.participant);
     console.log('实验数据:', this.state.data);
-    console.log('CSV格式:', this.generateCSV());
-    console.log('===================');
 
-    // TODO: 后续接入 Google Sheets
-    // fetch('GOOGLE_APPS_SCRIPT_URL', {
-    //   method: 'POST',
-    //   body: JSON.stringify(this.state.data)
-    // });
+    try {
+      const response = await fetch(SUBMIT_ENDPOINT, {
+        method: 'POST',
+        mode: 'no-cors', // Google Apps Script 需要 no-cors 模式
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          participant: this.state.participant,
+          completionCode: this.state.completionCode,
+          data: this.state.data
+        })
+      });
+
+      // no-cors 模式下无法读取响应，但请求成功发送即视为成功
+      document.getElementById('submit-loading').style.display = 'none';
+      document.getElementById('submit-success').style.display = 'inline';
+      console.log('数据已发送到服务器');
+
+    } catch (error) {
+      // 提交失败
+      document.getElementById('submit-loading').style.display = 'none';
+      document.getElementById('submit-error').style.display = 'inline';
+      console.error('数据提交失败:', error);
+    }
   },
 
   // ============================================================

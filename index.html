@@ -161,8 +161,10 @@
       <p id="completion-code" class="code-value">849302</p>
     </div>
 
-    <div class="submit-notice">
-      ⚠️ 您的数据已自动提交。如需保留一份自己的数据记录，可点击下方按钮下载。
+    <div id="submit-status" class="submit-notice">
+      <span id="submit-loading" style="display: none;">⏳ 正在提交数据...</span>
+      <span id="submit-success" style="display: none;">✅ 数据已成功提交</span>
+      <span id="submit-error" style="display: none;">⚠️ 自动提交失败，请下载数据后发送给研究者</span>
     </div>
 
     <div class="download-section">
@@ -178,6 +180,7 @@
 </div>
 
 <!-- 加载配置和实验逻辑 -->
+<script src="config/app.js"></script>
 <script src="config/trials.js"></script>
 <script src="experiment.js"></script>
 
