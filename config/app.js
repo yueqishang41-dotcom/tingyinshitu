@@ -3,4 +3,4 @@
  */
 
 // Google Apps Script 数据提交接口
-const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyOPWaovZMAR_Ka4kMRz78vriUMJ-T5Vz2Gz70X9a-bm4ZxJYVJc2PqCrHrd2N8vrZ2/exec";
+const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyezHf2l7D06dpa7QBtRfCq2uvGMfYamxxo9LidOVkrsLrqk57NVKpBW1EGcVUMnN8g/exec";
