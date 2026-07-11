@@ -1353,23 +1353,58 @@ const ExperimentApp = {
       ExperimentApp.state.phase = 'formal';
       ExperimentApp.state.trials = ExperimentApp.buildTrials(FORMAL_TRIALS, false);
       ExperimentApp.state.currentTrialIndex = 0;
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = false;
+      ExperimentApp.state.responded = false;
 
+      const trial = ExperimentApp.state.trials[0];
+      const totalTrials = FORMAL_TRIALS.length;
+
+      // 设置顶部信息
+      document.getElementById('trial-header').textContent = `第 1 题 / 共 ${totalTrials} 题（正式）`;
+
+      // 重置播放按钮
+      const playBtn = document.getElementById('play-btn');
+      playBtn.textContent = '▶ 重新播放';
+      playBtn.disabled = false;
+      playBtn.classList.remove('playing');
+
+      // 清空反馈
+      const feedbackArea = document.getElementById('feedback-area');
+      feedbackArea.className = '';
+
+      // 显示页面
       ExperimentApp.showPage('experiment');
-      ExperimentApp.startTrial();
 
-      // 停止倒计时
+      // 停止倒计时并设置时间
       ExperimentApp.clearTimer();
-
-      // 设置时间并更新显示
       ExperimentApp.state.timeLeft = timeLeft;
       ExperimentApp.updateTimerDisplay();
 
-      // 强制显示图片（使用 setTimeout 确保 DOM 更新完成）
-      setTimeout(() => {
-        ExperimentApp.state.audioFirstEnded = true;
-        ExperimentApp.state.imagesShown = false; // 重置以便 showImages 能执行
-        ExperimentApp.showImages();
-      }, 50);
+      // 直接渲染图片（绕过 showImages 的状态检查）
+      const imagesArea = document.getElementById('images-area');
+      imagesArea.innerHTML = '';
+      imagesArea.style.display = 'flex';
+
+      trial.options.forEach((word) => {
+        const card = document.createElement('div');
+        card.className = 'image-card';
+        card.dataset.word = word;
+
+        const svgContainer = document.createElement('div');
+        svgContainer.className = 'svg-icon';
+        svgContainer.innerHTML = SVG_ICONS[word] || `<svg viewBox="0 0 100 100"><text x="50" y="55" text-anchor="middle" font-size="14" fill="#666">${word}</text></svg>`;
+
+        const label = document.createElement('div');
+        label.className = 'image-label';
+        label.textContent = word;
+
+        card.appendChild(svgContainer);
+        card.appendChild(label);
+        imagesArea.appendChild(card);
+      });
+
+      ExperimentApp.state.imagesShown = true;
     },
 
     // 练习反馈
@@ -1377,37 +1412,74 @@ const ExperimentApp = {
       ExperimentApp.state.phase = 'practice';
       ExperimentApp.state.trials = ExperimentApp.buildTrials(PRACTICE_TRIALS, false);
       ExperimentApp.state.currentTrialIndex = 0;
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = false;
+      ExperimentApp.state.responded = false;
 
+      const trial = ExperimentApp.state.trials[0];
+      const totalTrials = PRACTICE_TRIALS.length;
+
+      // 设置顶部信息
+      document.getElementById('trial-header').textContent = `第 1 题 / 共 ${totalTrials} 题（练习）`;
+
+      // 重置播放按钮
+      const playBtn = document.getElementById('play-btn');
+      playBtn.textContent = '▶ 重新播放';
+      playBtn.disabled = false;
+      playBtn.classList.remove('playing');
+
+      // 清空反馈
+      const feedbackArea = document.getElementById('feedback-area');
+      feedbackArea.className = '';
+
+      // 显示页面
       ExperimentApp.showPage('experiment');
-      ExperimentApp.startTrial();
 
-      // 停止倒计时
+      // 停止倒计时并设置时间
       ExperimentApp.clearTimer();
       ExperimentApp.state.timeLeft = 15;
       ExperimentApp.updateTimerDisplay();
 
-      // 显示图片并模拟选择
+      // 直接渲染图片
+      const imagesArea = document.getElementById('images-area');
+      imagesArea.innerHTML = '';
+      imagesArea.style.display = 'flex';
+
+      trial.options.forEach((word) => {
+        const card = document.createElement('div');
+        card.className = 'image-card';
+        card.dataset.word = word;
+
+        const svgContainer = document.createElement('div');
+        svgContainer.className = 'svg-icon';
+        svgContainer.innerHTML = SVG_ICONS[word] || `<svg viewBox="0 0 100 100"><text x="50" y="55" text-anchor="middle" font-size="14" fill="#666">${word}</text></svg>`;
+
+        const label = document.createElement('div');
+        label.className = 'image-label';
+        label.textContent = word;
+
+        card.appendChild(svgContainer);
+        card.appendChild(label);
+        imagesArea.appendChild(card);
+      });
+
+      ExperimentApp.state.imagesShown = true;
+
+      // 模拟选择和反馈
       setTimeout(() => {
-        ExperimentApp.state.audioFirstEnded = true;
-        ExperimentApp.state.imagesShown = false;
-        ExperimentApp.showImages();
+        const cards = document.querySelectorAll('.image-card');
+        let wrongOption = trial.options.find(w => w !== trial.correctAnswer);
 
-        // 模拟选择
-        const trial = ExperimentApp.state.trials[0];
-        setTimeout(() => {
-          const cards = document.querySelectorAll('.image-card');
-          cards.forEach(c => {
-            if (isCorrect && c.dataset.word === trial.correctAnswer) {
-              c.classList.add('selected');
-            } else if (!isCorrect && c.dataset.word === trial.options[0]) {
-              c.classList.add('selected');
-            }
-          });
+        cards.forEach(c => {
+          if (isCorrect && c.dataset.word === trial.correctAnswer) {
+            c.classList.add('selected');
+          } else if (!isCorrect && c.dataset.word === wrongOption) {
+            c.classList.add('selected');
+          }
+        });
 
-          // 显示反馈
-          ExperimentApp.showFeedback(isCorrect, trial.correctAnswer);
-        }, 100);
-      }, 50);
+        ExperimentApp.showFeedback(isCorrect, trial.correctAnswer);
+      }, 100);
     },
 
     // 超时状态
@@ -1415,32 +1487,63 @@ const ExperimentApp = {
       ExperimentApp.state.phase = 'formal';
       ExperimentApp.state.trials = ExperimentApp.buildTrials(FORMAL_TRIALS, false);
       ExperimentApp.state.currentTrialIndex = 0;
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = false;
+      ExperimentApp.state.responded = true;
 
+      const trial = ExperimentApp.state.trials[0];
+      const totalTrials = FORMAL_TRIALS.length;
+
+      // 设置顶部信息
+      document.getElementById('trial-header').textContent = `第 1 题 / 共 ${totalTrials} 题（正式）`;
+
+      // 重置播放按钮
+      const playBtn = document.getElementById('play-btn');
+      playBtn.textContent = '▶ 重新播放';
+      playBtn.disabled = false;
+      playBtn.classList.remove('playing');
+
+      // 清空反馈
+      const feedbackArea = document.getElementById('feedback-area');
+      feedbackArea.className = '';
+
+      // 显示页面
       ExperimentApp.showPage('experiment');
-      ExperimentApp.startTrial();
 
-      // 停止倒计时
+      // 停止倒计时并设置时间
       ExperimentApp.clearTimer();
       ExperimentApp.state.timeLeft = 0;
       ExperimentApp.updateTimerDisplay();
 
-      // 显示图片并模拟超时
-      setTimeout(() => {
-        ExperimentApp.state.audioFirstEnded = true;
-        ExperimentApp.state.imagesShown = false;
-        ExperimentApp.showImages();
+      // 直接渲染图片
+      const imagesArea = document.getElementById('images-area');
+      imagesArea.innerHTML = '';
+      imagesArea.style.display = 'flex';
 
-        // 模拟超时
-        setTimeout(() => {
-          ExperimentApp.state.responded = true;
-          const feedbackArea = document.getElementById('feedback-area');
-          feedbackArea.className = 'feedback timeout show';
-          feedbackArea.textContent = '⏰ 超时！';
-          document.querySelectorAll('.image-card').forEach(c => {
-            c.classList.add('disabled');
-          });
-        }, 100);
-      }, 50);
+      trial.options.forEach((word) => {
+        const card = document.createElement('div');
+        card.className = 'image-card disabled';
+        card.dataset.word = word;
+
+        const svgContainer = document.createElement('div');
+        svgContainer.className = 'svg-icon';
+        svgContainer.innerHTML = SVG_ICONS[word] || `<svg viewBox="0 0 100 100"><text x="50" y="55" text-anchor="middle" font-size="14" fill="#666">${word}</text></svg>`;
+
+        const label = document.createElement('div');
+        label.className = 'image-label';
+        label.textContent = word;
+
+        card.appendChild(svgContainer);
+        card.appendChild(label);
+        imagesArea.appendChild(card);
+      });
+
+      ExperimentApp.state.imagesShown = true;
+
+      // 显示超时提示
+      const feedback = document.getElementById('feedback-area');
+      feedback.className = 'feedback timeout show';
+      feedback.textContent = '⏰ 超时！';
     },
 
     // 结束页
