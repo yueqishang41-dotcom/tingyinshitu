@@ -1281,6 +1281,74 @@ const ExperimentApp = {
   },
 
   // ============================================================
+  // 快速测试模式 - 通过控制台调用
+  // ============================================================
+  quickTest() {
+    console.log('🚀 快速测试模式启动...');
+
+    // 自动填充被试信息
+    this.state.participant = {
+      id: 'TEST_' + Date.now(),
+      age: 25,
+      gender: '女'
+    };
+
+    // 生成模拟数据
+    const mockData = [];
+
+    // 练习试次
+    PRACTICE_TRIALS.forEach((t, i) => {
+      mockData.push({
+        participant_id: this.state.participant.id,
+        age: this.state.participant.age,
+        gender: this.state.participant.gender,
+        phase: 'practice',
+        trial_index: i + 1,
+        audio: t.word + '.mp3',
+        correct_image: t.word + '.jpg',
+        response: t.word + '.jpg',
+        correct: true,
+        rt_ms: 1500 + Math.floor(Math.random() * 2000),
+        play_count: 1,
+        timeout: false,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // 正式试次
+    FORMAL_TRIALS.forEach((t, i) => {
+      const isTimeout = Math.random() < 0.1; // 10% 超时
+      const isCorrect = !isTimeout && Math.random() > 0.2; // 80% 正确率
+      mockData.push({
+        participant_id: this.state.participant.id,
+        age: this.state.participant.age,
+        gender: this.state.participant.gender,
+        phase: 'formal',
+        trial_index: i + 1,
+        audio: t.word + '.mp3',
+        correct_image: t.word + '.jpg',
+        response: isTimeout ? 'timeout' : (isCorrect ? t.word + '.jpg' : t.distractors[0] + '.jpg'),
+        correct: isCorrect,
+        rt_ms: isTimeout ? 30000 : 1500 + Math.floor(Math.random() * 2000),
+        play_count: 1 + Math.floor(Math.random() * 2),
+        timeout: isTimeout,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    this.state.data = mockData;
+    this.generateCompletionCode();
+
+    // 直接显示结束页
+    this.showEndPage();
+
+    console.log('✅ 快速测试完成！');
+    console.log('被试编号:', this.state.participant.id);
+    console.log('完成码:', this.state.completionCode);
+    console.log('数据条数:', mockData.length);
+  },
+
+  // ============================================================
   // Preview 模式（用于 Figma 导入）
   // ============================================================
   preview: {
