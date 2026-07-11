@@ -1210,13 +1210,13 @@ const ExperimentApp = {
     console.log('实验数据:', this.state.data);
 
     try {
-      // 直接发送 data 数组，符合 GAS 脚本期望的格式
+      // 使用 FormData 发送 JSON 字符串
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(this.state.data));
+
       const response = await fetch(SUBMIT_ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(this.state.data)
+        body: formData
       });
 
       const result = await response.json();

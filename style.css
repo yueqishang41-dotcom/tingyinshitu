@@ -573,11 +573,9 @@ body {
   height: 100%;
 }
 
+/* 隐藏图片标签 - 听音选图应根据图片内容选择，不应显示单词 */
 .image-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-transform: capitalize;
+  display: none;
 }
 
 /* ============================================================
