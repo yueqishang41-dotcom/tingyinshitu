@@ -1209,29 +1209,28 @@ const ExperimentApp = {
     console.log('被试信息:', this.state.participant);
     console.log('实验数据:', this.state.data);
 
-    // 准备发送的数据
-    const payload = {
-      participant: this.state.participant,
-      completionCode: this.state.completionCode,
-      data: this.state.data
-    };
-
     try {
-      // 方式1: 使用 FormData (Google Apps Script 通常更容易处理)
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(payload));
-
+      // 直接发送 data 数组，符合 GAS 脚本期望的格式
       const response = await fetch(SUBMIT_ENDPOINT, {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(this.state.data)
       });
 
-      const result = await response.text();
+      const result = await response.json();
       console.log('服务器响应:', result);
 
       document.getElementById('submit-loading').style.display = 'none';
-      document.getElementById('submit-success').style.display = 'inline';
-      console.log('数据已发送到服务器');
+
+      if (result.status === 'success') {
+        document.getElementById('submit-success').style.display = 'inline';
+        console.log('数据提交成功:', result.message);
+      } else {
+        document.getElementById('submit-error').style.display = 'inline';
+        console.error('服务器返回错误:', result.message);
+      }
 
     } catch (error) {
       // 提交失败
