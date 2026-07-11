@@ -985,16 +985,59 @@ const ExperimentApp = {
     }
   },
 
+  // 使用 Web Audio API 合成单词发音（不同单词有不同音调）
+  playWordAudio(word) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // 根据单词生成不同的频率模式
+      const charCodes = word.split('').map(c => c.charCodeAt(0));
+      const baseFreq = 200 + (charCodes.reduce((a, b) => a + b, 0) % 400);
+
+      oscillator.frequency.value = baseFreq;
+      oscillator.type = 'sine';
+      gainNode.gain.value = 0.4;
+
+      // 添加频率变化模拟语调
+      const now = audioContext.currentTime;
+      oscillator.frequency.setValueAtTime(baseFreq, now);
+      oscillator.frequency.linearRampToValueAtTime(baseFreq * 1.2, now + 0.3);
+      oscillator.frequency.linearRampToValueAtTime(baseFreq * 0.9, now + 0.6);
+
+      // 音量包络
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.4, now + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0.3, now + 0.5);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.8);
+
+      oscillator.start(now);
+      oscillator.stop(now + 0.8);
+
+      return true;
+    } catch (e) {
+      console.log('Web Audio API 不可用:', e);
+      return false;
+    }
+  },
+
   simulateAudioEnd() {
     const playBtn = document.getElementById('play-btn');
+    const trial = this.state.trials[this.state.currentTrialIndex];
 
-    // 先播放提示音
-    this.playBeep();
+    // 播放单词音频
+    const audioPlayed = this.playWordAudio(trial.word);
+
+    if (!audioPlayed) {
+      // 如果 Web Audio 也失败，用简单的蜂鸣声
+      this.playBeep();
+    }
 
     setTimeout(() => {
-      // 再播放一次提示音表示结束
-      this.playBeep();
-
       playBtn.textContent = '▶ 重新播放';
       playBtn.classList.remove('playing');
 
