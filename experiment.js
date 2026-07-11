@@ -1209,21 +1209,26 @@ const ExperimentApp = {
     console.log('被试信息:', this.state.participant);
     console.log('实验数据:', this.state.data);
 
+    // 准备发送的数据
+    const payload = {
+      participant: this.state.participant,
+      completionCode: this.state.completionCode,
+      data: this.state.data
+    };
+
     try {
+      // 方式1: 使用 FormData (Google Apps Script 通常更容易处理)
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(payload));
+
       const response = await fetch(SUBMIT_ENDPOINT, {
         method: 'POST',
-        mode: 'no-cors', // Google Apps Script 需要 no-cors 模式
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          participant: this.state.participant,
-          completionCode: this.state.completionCode,
-          data: this.state.data
-        })
+        body: formData
       });
 
-      // no-cors 模式下无法读取响应，但请求成功发送即视为成功
+      const result = await response.text();
+      console.log('服务器响应:', result);
+
       document.getElementById('submit-loading').style.display = 'none';
       document.getElementById('submit-success').style.display = 'inline';
       console.log('数据已发送到服务器');
