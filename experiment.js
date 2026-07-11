@@ -1254,10 +1254,221 @@ const ExperimentApp = {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  },
+
+  // ============================================================
+  // Preview 模式（用于 Figma 导入）
+  // ============================================================
+  preview: {
+    // 检测 URL 是否有 preview 参数
+    check() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('preview');
+    },
+
+    // 初始化 preview 模式
+    init(previewMode) {
+      console.log('[Preview Mode]', previewMode);
+
+      // 设置 mock 数据
+      ExperimentApp.state.participant = {
+        id: 'S_PREVIEW',
+        age: 25,
+        gender: '女'
+      };
+      ExperimentApp.state.completionCode = '123456';
+
+      // 根据不同模式渲染
+      switch (previewMode) {
+        case 'welcome':
+          this.showWelcome();
+          break;
+        case 'participant':
+          this.showParticipant();
+          break;
+        case 'instruction':
+          this.showInstruction();
+          break;
+        case 'trial-before-audio':
+          this.showTrialBeforeAudio();
+          break;
+        case 'trial-images-visible':
+          this.showTrialImagesVisible(15);
+          break;
+        case 'trial-countdown-orange':
+          this.showTrialImagesVisible(8);
+          break;
+        case 'trial-countdown-red':
+          this.showTrialImagesVisible(3);
+          break;
+        case 'practice-correct':
+          this.showPracticeFeedback(true);
+          break;
+        case 'practice-wrong':
+          this.showPracticeFeedback(false);
+          break;
+        case 'timeout':
+          this.showTimeout();
+          break;
+        case 'end':
+          this.showEnd();
+          break;
+        default:
+          console.warn('Unknown preview mode:', previewMode);
+      }
+    },
+
+    // 欢迎页
+    showWelcome() {
+      ExperimentApp.showPage('welcome');
+    },
+
+    // 被试信息填写页
+    showParticipant() {
+      ExperimentApp.showPage('info');
+    },
+
+    // 实验说明页
+    showInstruction() {
+      ExperimentApp.showPage('instructions');
+    },
+
+    // 试次页 - 播放前（只有播放按钮）
+    showTrialBeforeAudio() {
+      ExperimentApp.state.phase = 'formal';
+      ExperimentApp.state.trials = ExperimentApp.buildTrials(FORMAL_TRIALS, false);
+      ExperimentApp.state.currentTrialIndex = 0;
+
+      ExperimentApp.showPage('experiment');
+      ExperimentApp.startTrial();
+
+      // 停止倒计时，保持30秒
+      ExperimentApp.clearTimer();
+      ExperimentApp.state.timeLeft = 30;
+      ExperimentApp.updateTimerDisplay();
+    },
+
+    // 试次页 - 图片可见
+    showTrialImagesVisible(timeLeft) {
+      ExperimentApp.state.phase = 'formal';
+      ExperimentApp.state.trials = ExperimentApp.buildTrials(FORMAL_TRIALS, false);
+      ExperimentApp.state.currentTrialIndex = 0;
+
+      ExperimentApp.showPage('experiment');
+      ExperimentApp.startTrial();
+
+      // 停止倒计时
+      ExperimentApp.clearTimer();
+
+      // 设置时间并更新显示
+      ExperimentApp.state.timeLeft = timeLeft;
+      ExperimentApp.updateTimerDisplay();
+
+      // 强制显示图片
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = true;
+      ExperimentApp.showImages();
+    },
+
+    // 练习反馈
+    showPracticeFeedback(isCorrect) {
+      ExperimentApp.state.phase = 'practice';
+      ExperimentApp.state.trials = ExperimentApp.buildTrials(PRACTICE_TRIALS, false);
+      ExperimentApp.state.currentTrialIndex = 0;
+
+      ExperimentApp.showPage('experiment');
+      ExperimentApp.startTrial();
+
+      // 停止倒计时
+      ExperimentApp.clearTimer();
+      ExperimentApp.state.timeLeft = 15;
+      ExperimentApp.updateTimerDisplay();
+
+      // 显示图片
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = true;
+      ExperimentApp.showImages();
+
+      // 模拟选择
+      const trial = ExperimentApp.state.trials[0];
+      setTimeout(() => {
+        const cards = document.querySelectorAll('.image-card');
+        cards.forEach(c => {
+          if (isCorrect && c.dataset.word === trial.correctAnswer) {
+            c.classList.add('selected');
+          } else if (!isCorrect && c.dataset.word === trial.distractors[0]) {
+            c.classList.add('selected');
+          }
+        });
+
+        // 显示反馈
+        ExperimentApp.showFeedback(isCorrect, trial.correctAnswer);
+      }, 100);
+    },
+
+    // 超时状态
+    showTimeout() {
+      ExperimentApp.state.phase = 'formal';
+      ExperimentApp.state.trials = ExperimentApp.buildTrials(FORMAL_TRIALS, false);
+      ExperimentApp.state.currentTrialIndex = 0;
+
+      ExperimentApp.showPage('experiment');
+      ExperimentApp.startTrial();
+
+      // 停止倒计时
+      ExperimentApp.clearTimer();
+      ExperimentApp.state.timeLeft = 0;
+      ExperimentApp.updateTimerDisplay();
+
+      // 显示图片
+      ExperimentApp.state.audioFirstEnded = true;
+      ExperimentApp.state.imagesShown = true;
+      ExperimentApp.showImages();
+
+      // 模拟超时
+      setTimeout(() => {
+        ExperimentApp.state.responded = true;
+        const feedbackArea = document.getElementById('feedback-area');
+        feedbackArea.className = 'feedback timeout show';
+        feedbackArea.textContent = '⏰ 超时！';
+        document.querySelectorAll('.image-card').forEach(c => {
+          c.classList.add('disabled');
+        });
+      }, 100);
+    },
+
+    // 结束页
+    showEnd() {
+      // 生成 mock 数据
+      ExperimentApp.state.data = FORMAL_TRIALS.map((t, i) => ({
+        participant_id: 'S_PREVIEW',
+        age: 25,
+        gender: '女',
+        phase: 'formal',
+        trial_index: i + 1,
+        audio: t.word + '.mp3',
+        correct_image: t.word + '.jpg',
+        response: t.word + '.jpg',
+        correct: true,
+        rt_ms: 1500 + Math.floor(Math.random() * 1000),
+        play_count: 1,
+        timeout: false,
+        timestamp: new Date().toISOString()
+      }));
+
+      ExperimentApp.showPage('end');
+      document.getElementById('completion-code').textContent = ExperimentApp.state.completionCode;
+    }
   }
 };
 
 // 页面加载后初始化
 document.addEventListener('DOMContentLoaded', () => {
-  ExperimentApp.init();
+  // 检测 preview 模式
+  const previewMode = ExperimentApp.preview.check();
+  if (previewMode) {
+    ExperimentApp.preview.init(previewMode);
+  } else {
+    ExperimentApp.init();
+  }
 });
